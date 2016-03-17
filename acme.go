@@ -7,7 +7,6 @@ import (
 	"crypto/rsa"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"os"
 
@@ -145,7 +144,6 @@ func (w *AcmeWrapper) initACME(serverRunning bool) (err error) {
 	w.client.ExcludeChallenges([]acme.Challenge{acme.HTTP01, acme.DNS01})
 	w.client.SetTLSAddress(w.config.Address)
 
-	fmt.Printf("CERTGET\n")
 	// Now if we are to renew our certificate, do it now! We do this now if server is not running
 	// yet, since in this case we use the default SNI provider, which runs a custom server.
 	//  We start a quick custom server
@@ -160,7 +158,6 @@ func (w *AcmeWrapper) initACME(serverRunning bool) (err error) {
 			return err
 		}
 	}
-	fmt.Printf("CERTGETDONE\n")
 
 	// Now that the user and client basics are intialized, we set up the client
 	// so that it uses our custom SNI provider. We don't want

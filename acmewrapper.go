@@ -4,7 +4,6 @@ import (
 	"crypto"
 	"crypto/tls"
 	"errors"
-	"fmt"
 	"os"
 	"sync"
 
@@ -148,7 +147,6 @@ func New(c Config) (*AcmeWrapper, error) {
 
 	// Now load up the key and cert files for TLS if they are set
 	if c.TLSKeyFile != "" || c.TLSCertFile != "" {
-		fmt.Printf("SET CERT\n")
 		err = w.SetNewCert(c.TLSKeyFile, c.TLSKeyFile)
 		if err != nil {
 			if !os.IsNotExist(err) || c.AcmeDisabled {
@@ -168,7 +166,6 @@ func New(c Config) (*AcmeWrapper, error) {
 		//	- w.privatekey
 		//	- w.registration
 		//	- w.client
-		fmt.Printf("ACME INIT\n")
 		if err = w.initACME(false); err != nil {
 			return nil, err
 		}

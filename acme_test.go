@@ -8,26 +8,25 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const TESTAPI = "https://acme-staging.api.letsencrypt.org/directory"
-
-const TESTDOMAINS = []string{"connectordb.com", "www.connectordb.com"}
-
 func TestUserErrors(t *testing.T) {
 	_, err := New(Config{
 		Server:      TESTAPI,
 		TOSCallback: TOSAgree,
+		Address:     TLSADDRESS,
 	})
 	require.Error(t, err)
 	_, err = New(Config{
 		Server:  TESTAPI,
-		Domains: []string{TESTDOMAINS},
+		Domains: TESTDOMAINS,
+		Address: TLSADDRESS,
 	})
 	require.Error(t, err)
 
 	_, err = New(Config{
 		Server:         TESTAPI,
 		TOSCallback:    TOSAgree,
-		Domains:        []string{TESTDOMAINS},
+		Domains:        TESTDOMAINS,
+		Address:        TLSADDRESS,
 		PrivateKeyFile: "testinguser.key",
 	})
 	require.Error(t, err)
@@ -35,7 +34,8 @@ func TestUserErrors(t *testing.T) {
 	_, err = New(Config{
 		Server:           TESTAPI,
 		TOSCallback:      TOSAgree,
-		Domains:          []string{TESTDOMAINS},
+		Domains:          TESTDOMAINS,
+		Address:          TLSADDRESS,
 		RegistrationFile: "testinguser.reg",
 	})
 	require.Error(t, err)
@@ -46,7 +46,7 @@ func TestUserErrors(t *testing.T) {
 			fmt.Printf("TOS URL: %s\n", tosurl)
 			return false
 		},
-		Domains: []string{TESTDOMAINS},
+		Domains: TESTDOMAINS,
 	})
 
 	require.Error(t, err)
@@ -59,13 +59,15 @@ func TestUser(t *testing.T) {
 	w, err := New(Config{
 		Server:      TESTAPI,
 		TOSCallback: TOSAgree,
-		Domains:     []string{TESTDOMAINS},
+		Domains:     TESTDOMAINS,
+		Address:     TLSADDRESS,
 	})
 
 	require.NoError(t, err)
 	require.Equal(t, w.GetEmail(), "")
 	require.NotNil(t, w.GetRegistration())
 	require.NotNil(t, w.GetPrivateKey())
+	require.NotNil(t, w.GetCertificate())
 
 	os.Remove("testinguser.key")
 	os.Remove("testinguser.reg")
@@ -73,9 +75,10 @@ func TestUser(t *testing.T) {
 	w, err = New(Config{
 		Server:           TESTAPI,
 		TOSCallback:      TOSAgree,
-		Domains:          []string{"localhost"},
+		Domains:          TESTDOMAINS,
 		PrivateKeyFile:   "testinguser.key",
 		RegistrationFile: "testinguser.reg",
+		Address:          TLSADDRESS,
 	})
 
 	require.NoError(t, err)
@@ -84,9 +87,10 @@ func TestUser(t *testing.T) {
 	w, err = New(Config{
 		Server:           TESTAPI,
 		TOSCallback:      TOSDecline,
-		Domains:          []string{"localhost"},
+		Domains:          TESTDOMAINS,
 		PrivateKeyFile:   "testinguser.key",
 		RegistrationFile: "testinguser.reg",
+		Address:          TLSADDRESS,
 	})
 
 	require.NoError(t, err)
