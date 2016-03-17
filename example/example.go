@@ -71,6 +71,6 @@ func main() {
 		fmt.Printf("ERROR: %s", err.Error())
 		os.Exit(1)
 	}
-	fmt.Printf("Running server at %s", *address)
+	fmt.Printf("\n\nRunning server at %s\n\n", *address)
 	http.Serve(listener, nil)
 }
