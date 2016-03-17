@@ -113,12 +113,12 @@ func (w *AcmeWrapper) Renew() (err error) {
 // and ensures that messages regarding certificate expiration as well as
 // any renewals if ACME is configured are run on time.
 func backgroundExpirationChecker(w *AcmeWrapper) {
-	fmt.Printf("Started bg expiration checker\n")
+	logf("[acmewrapper] Started background expiration checker\n")
 	for {
 		time.Sleep(time.Duration(w.Config.RenewCheck) * time.Second)
-		fmt.Printf("Checking if cert needs update...\n")
+		logf("[acmewrapper] Checking if cert needs update...\n")
 		if w.CertNeedsUpdate() {
-			fmt.Printf("...yes it does\n")
+			logf("[acmewrapper] ...yes it does\n")
 			for {
 				if !w.CertNeedsUpdate() {
 					break
@@ -130,6 +130,9 @@ func backgroundExpirationChecker(w *AcmeWrapper) {
 					err := w.Renew()
 					if err != nil && w.Config.RenewFailedCallback != nil {
 						w.Config.RenewFailedCallback(err)
+					}
+					if err != nil {
+						logf("[acmewrapper] Cert update renewal failed!")
 					}
 				}
 				if !w.CertNeedsUpdate() {

@@ -3,11 +3,27 @@ package acmewrapper
 import (
 	"crypto"
 	"crypto/tls"
+	"log"
 	"os"
 	"sync"
 
 	"github.com/xenolf/lego/acme"
 )
+
+type LoggerInterface interface {
+	Printf(format string, v ...interface{})
+}
+
+// Allows to use a custom logger for logging purposes
+var Logger LoggerInterface
+
+func logf(s string, v ...interface{}) {
+	if Logger == nil {
+		log.Printf(s, v...)
+	} else {
+		Logger.Printf(s, v...)
+	}
+}
 
 // AcmeWrapper is the main object which controls tls certificates and their renewals
 type AcmeWrapper struct {
