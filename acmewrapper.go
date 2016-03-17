@@ -146,6 +146,9 @@ func New(c Config) (*AcmeWrapper, error) {
 	if c.RetryDelay == 0 {
 		c.RetryDelay = DefaultRetryDelay
 	}
+	if c.RenewCheck == 0 {
+		c.RenewCheck = DefaultRenewCheck
+	}
 	if c.Address == "" {
 		c.Address = DefaultAddress
 	}
