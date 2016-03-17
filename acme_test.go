@@ -68,6 +68,7 @@ func TestUser(t *testing.T) {
 	require.NotNil(t, w.GetRegistration())
 	require.NotNil(t, w.GetPrivateKey())
 	require.NotNil(t, w.GetCertificate())
+	require.False(t, w.CertNeedsUpdate())
 
 	os.Remove("testinguser.key")
 	os.Remove("testinguser.reg")
