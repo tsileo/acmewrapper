@@ -31,6 +31,24 @@ func arraysMatch(a []string, b []string) bool {
 	return true
 }
 
+func getCertError(errmap map[string]error) error {
+	if len(errmap) == 0 {
+		return nil
+	}
+
+	// Check if the error is actually a TOS error (meaning we need
+	// to agree to the TOS again)
+	for _, err := range errmap {
+		if _, ok := err.(acme.TOSError); ok {
+			return err
+		}
+	}
+
+	// Nope, return the full error
+	return fmt.Errorf("%v", errmap)
+
+}
+
 // Renew generates a new certificate
 func (w *AcmeWrapper) Renew() (err error) {
 	w.configmutex.Lock()
@@ -40,30 +58,20 @@ func (w *AcmeWrapper) Renew() (err error) {
 		return errors.New("Can't renew cert when ACME is disabled")
 	}
 
-	// If a cert already exists, use the same private key. If it doesn't
-	// then generate a new one
-	w.certmutex.RLock()
-	crt := w.cert
-	w.certmutex.RUnlock()
-
 	// TODO: In the future, figure out how to get renewals working with
 	// the information we have
 	cert, errmap := w.client.ObtainCertificate(w.config.Domains, true, nil)
-	err = nil
-	if len(errmap) != 0 {
-		for _, errv := range errmap {
-			if _, ok := errv.(acme.TOSError); ok {
-				err = errv
-			}
-		}
-		if err == nil {
-			err = fmt.Errorf("%v", errmap)
+	err = getCertError(errmap)
+
+	if err != nil {
+		// If it is not a TOS error, fail
+		if _, ok := err.(acme.TOSError); !ok {
+			return err
 		}
 
-	}
+		// There are new TOS
 
-	// If our error is a terms of service change, see if we accept it
-	if _, ok := err.(acme.TOSError); ok {
+		// TODO: update registration with new TOS
 		if !w.config.TOSCallback(w.registration.TosURL) {
 			return errors.New("Did not accept new TOS")
 		}
@@ -73,25 +81,15 @@ func (w *AcmeWrapper) Renew() (err error) {
 			return err
 		}
 
-	} else {
-		return err
-	}
-
-	if err != nil {
 		// We agreed to new TOS. try again
-		var errmap map[string]error
 		cert, errmap = w.client.ObtainCertificate(w.config.Domains, true, nil)
-		err = nil
-		if len(errmap) != 0 {
-			err = fmt.Errorf("%v", errmap)
-		}
-		// See if there was a new error
+		err = getCertError(errmap)
 		if err != nil {
 			return err
 		}
 	}
 
-	crt, err = tlsCert(cert)
+	crt, err := tlsCert(cert)
 	if err != nil {
 		return err
 	}
