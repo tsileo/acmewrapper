@@ -102,7 +102,7 @@ func (w *AcmeWrapper) Renew() (err error) {
 	if w.Config.TLSCertFile != "" {
 		writeCert(w.Config.TLSCertFile, w.Config.TLSKeyFile, cert)
 	}
-	fmt.Printf("Writing new cert...")
+
 	w.certmutex.Lock()
 	w.cert = crt
 	w.certmutex.Unlock()

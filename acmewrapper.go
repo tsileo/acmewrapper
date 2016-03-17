@@ -3,7 +3,6 @@ package acmewrapper
 import (
 	"crypto"
 	"crypto/tls"
-	"errors"
 	"os"
 	"sync"
 
@@ -149,9 +148,6 @@ func New(c Config) (*AcmeWrapper, error) {
 	}
 	if c.Address == "" {
 		c.Address = DefaultAddress
-	}
-	if c.TOSCallback == nil {
-		return nil, errors.New("TOSCallback is required: you need to agree to the terms of service")
 	}
 
 	// Now set up the actual wrapper

@@ -38,6 +38,9 @@ func (w *AcmeWrapper) initACME(serverRunning bool) (err error) {
 	if len(w.Config.Domains) == 0 {
 		return errors.New("No domains set - can't initialize ACME client")
 	}
+	if w.Config.TOSCallback == nil {
+		return errors.New("TOSCallback is required: you need to agree to the terms of service")
+	}
 
 	if w.Config.PrivateKeyFile != "" {
 		if w.Config.RegistrationFile == "" {
