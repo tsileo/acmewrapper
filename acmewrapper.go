@@ -162,7 +162,7 @@ func New(c Config) (*AcmeWrapper, error) {
 
 	// Now load up the key and cert files for TLS if they are set
 	if c.TLSKeyFile != "" || c.TLSCertFile != "" {
-		err = w.SetNewCert(c.TLSKeyFile, c.TLSKeyFile)
+		err = w.SetNewCert(c.TLSCertFile, c.TLSKeyFile)
 		if err != nil {
 			if !os.IsNotExist(err) || c.AcmeDisabled {
 				// The TLS key and cert file are only
