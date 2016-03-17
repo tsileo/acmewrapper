@@ -2,6 +2,7 @@ package acmewrapper
 
 import (
 	"crypto/tls"
+	"crypto/x509"
 	"io/ioutil"
 	"os"
 	"time"
@@ -52,6 +53,20 @@ func (w *AcmeWrapper) CertNeedsUpdate() bool {
 		// The cert doesn't exist - it certainly needs update
 		return true
 	}
-	timeLeft := w.cert.Leaf.NotAfter.Sub(time.Now().UTC())
-	return int64(timeLeft.Seconds()) < w.config.RenewTime
+
+	// w.cert.Leaf is not set, so we have to manually parse the certs
+	// and make sure that they don't expire soon
+	for _, c := range w.cert.Certificate {
+		crt, err := x509.ParseCertificate(c)
+		if err != nil {
+			// If there's an error, we assume the cert is broken, and needs update
+			return true
+		}
+		timeLeft := crt.NotAfter.Sub(time.Now().UTC())
+		if int64(timeLeft.Seconds()) < w.config.RenewTime {
+			return true
+		}
+	}
+
+	return false
 }

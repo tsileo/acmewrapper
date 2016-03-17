@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"time"
+
+	"github.com/xenolf/lego/acme"
 )
 
 // http://stackoverflow.com/questions/15323767/does-golang-have-if-x-in-construct-similar-to-python
@@ -47,8 +49,46 @@ func (w *AcmeWrapper) Renew() (err error) {
 	// TODO: In the future, figure out how to get renewals working with
 	// the information we have
 	cert, errmap := w.client.ObtainCertificate(w.config.Domains, true, nil)
+	err = nil
 	if len(errmap) != 0 {
-		return fmt.Errorf("%v", errmap)
+		for _, errv := range errmap {
+			if _, ok := errv.(acme.TOSError); ok {
+				err = errv
+			}
+		}
+		if err == nil {
+			err = fmt.Errorf("%v", errmap)
+		}
+
+	}
+
+	// If our error is a terms of service change, see if we accept it
+	if _, ok := err.(acme.TOSError); ok {
+		if !w.config.TOSCallback(w.registration.TosURL) {
+			return errors.New("Did not accept new TOS")
+		}
+
+		err = w.client.AgreeToTOS()
+		if err != nil {
+			return err
+		}
+
+	} else {
+		return err
+	}
+
+	if err != nil {
+		// We agreed to new TOS. try again
+		var errmap map[string]error
+		cert, errmap = w.client.ObtainCertificate(w.config.Domains, true, nil)
+		err = nil
+		if len(errmap) != 0 {
+			err = fmt.Errorf("%v", errmap)
+		}
+		// See if there was a new error
+		if err != nil {
+			return err
+		}
 	}
 
 	crt, err = tlsCert(cert)
