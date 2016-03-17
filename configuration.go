@@ -84,9 +84,6 @@ type Config struct {
 	Address string
 
 	// This callback is run before each attempt at renewing. If not set, it simply isn't run.
-	// If ACME is disabled, it is run every RetryDelay from RenewTime. That is, by default,
-	// it will run every day for the last week of the current certificate's validity.
-	// This is a good place to put a "your certificate is expiring" message
 	RenewCallback func()
 	// RenewFailedCallback is run if renewing failed.
 	RenewFailedCallback func(error)

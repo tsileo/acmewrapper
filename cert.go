@@ -63,7 +63,7 @@ func (w *AcmeWrapper) CertNeedsUpdate() bool {
 			return true
 		}
 		timeLeft := crt.NotAfter.Sub(time.Now().UTC())
-		if int64(timeLeft.Seconds()) < w.config.RenewTime {
+		if int64(timeLeft.Seconds()) < w.Config.RenewTime {
 			return true
 		}
 	}

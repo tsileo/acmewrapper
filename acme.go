@@ -16,7 +16,7 @@ import (
 // initACME initailizes the acme client - it does everything from reading/writing the
 // user private key and registration files, to ensuring that the user is registered
 // on the ACME server and has accepted the TOS.
-// It expects w.config to be set up.
+// It expects w.Config to be set up.
 // It sets up:
 //	- w.privatekey
 //	- w.registration
@@ -28,26 +28,26 @@ import (
 // initACME must set up its own temporary server to get any initial certificates.
 func (w *AcmeWrapper) initACME(serverRunning bool) (err error) {
 	// We are modifying and using some of the config properties, so lock them
-	w.configmutex.Lock()
-	defer w.configmutex.Unlock()
+	w.Lock()
+	defer w.Unlock()
 
 	// Just in case initACME is being run on an existing AcmeWrapper
 	w.registration = nil
 	w.privatekey = nil
 
-	if len(w.config.Domains) == 0 {
+	if len(w.Config.Domains) == 0 {
 		return errors.New("No domains set - can't initialize ACME client")
 	}
 
-	if w.config.PrivateKeyFile != "" {
-		if w.config.RegistrationFile == "" {
+	if w.Config.PrivateKeyFile != "" {
+		if w.Config.RegistrationFile == "" {
 			return errors.New("A filename was set for the private key but not the registration file")
 		}
 
 		// We are to use file-backed registration. See if the files exist already. We first load
 		// the key file, then we load the registration file
 
-		w.privatekey, err = LoadPrivateKey(w.config.PrivateKeyFile)
+		w.privatekey, err = LoadPrivateKey(w.Config.PrivateKeyFile)
 		if err != nil {
 			if !os.IsNotExist(err) {
 				return err
@@ -55,7 +55,7 @@ func (w *AcmeWrapper) initACME(serverRunning bool) (err error) {
 			// The private key file doesn't exist - w.privatekey is left at nil
 		}
 
-		f, err := os.Open(w.config.RegistrationFile)
+		f, err := os.Open(w.Config.RegistrationFile)
 		if err == nil {
 			defer f.Close()
 
@@ -72,7 +72,7 @@ func (w *AcmeWrapper) initACME(serverRunning bool) (err error) {
 			return errors.New("One of the files (registration or key) exists, but the other is missing")
 		}
 
-	} else if w.config.RegistrationFile != "" {
+	} else if w.Config.RegistrationFile != "" {
 		return errors.New("A filename was set for the registration file but not the private key")
 	}
 
@@ -81,15 +81,15 @@ func (w *AcmeWrapper) initACME(serverRunning bool) (err error) {
 		// Whatever the case, we generate our acme user
 
 		// Generate the key
-		if w.config.PrivateKeyType == acme.RSA2048 {
+		if w.Config.PrivateKeyType == acme.RSA2048 {
 			w.privatekey, err = rsa.GenerateKey(rand.Reader, 2048)
-		} else if w.config.PrivateKeyType == acme.RSA4096 {
+		} else if w.Config.PrivateKeyType == acme.RSA4096 {
 			w.privatekey, err = rsa.GenerateKey(rand.Reader, 4096)
-		} else if w.config.PrivateKeyType == acme.RSA8192 {
+		} else if w.Config.PrivateKeyType == acme.RSA8192 {
 			w.privatekey, err = rsa.GenerateKey(rand.Reader, 8192)
-		} else if w.config.PrivateKeyType == acme.EC256 {
+		} else if w.Config.PrivateKeyType == acme.EC256 {
 			w.privatekey, err = ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
-		} else if w.config.PrivateKeyType == acme.EC384 {
+		} else if w.Config.PrivateKeyType == acme.EC384 {
 			w.privatekey, err = ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
 		} else {
 			return errors.New("Unrecognized key type")
@@ -98,9 +98,9 @@ func (w *AcmeWrapper) initACME(serverRunning bool) (err error) {
 			return err
 		}
 
-		if w.config.PrivateKeyFile != "" {
+		if w.Config.PrivateKeyFile != "" {
 			// If we are to use a file, write it now
-			if err = SavePrivateKey(w.config.PrivateKeyFile, w.privatekey); err != nil {
+			if err = SavePrivateKey(w.Config.PrivateKeyFile, w.privatekey); err != nil {
 				return err
 			}
 		}
@@ -108,7 +108,7 @@ func (w *AcmeWrapper) initACME(serverRunning bool) (err error) {
 	}
 
 	// Now that we have the key and necessary setup info, we prepare the ACME client.
-	w.client, err = acme.NewClient(w.config.Server, w, w.config.PrivateKeyType)
+	w.client, err = acme.NewClient(w.Config.Server, w, w.Config.PrivateKeyType)
 	if err != nil {
 		return err
 	}
@@ -120,7 +120,7 @@ func (w *AcmeWrapper) initACME(serverRunning bool) (err error) {
 			return err
 		}
 
-		if !w.config.TOSCallback(w.registration.TosURL) {
+		if !w.Config.TOSCallback(w.registration.TosURL) {
 			return errors.New("Terms of service were not accepted")
 		}
 
@@ -129,12 +129,12 @@ func (w *AcmeWrapper) initACME(serverRunning bool) (err error) {
 		}
 
 		// If we are to use a registration file, write the file now
-		if w.config.RegistrationFile != "" {
+		if w.Config.RegistrationFile != "" {
 			jsonBytes, err := json.MarshalIndent(w.registration, "", "\t")
 			if err != nil {
 				return err
 			}
-			if err = ioutil.WriteFile(w.config.RegistrationFile, jsonBytes, 0600); err != nil {
+			if err = ioutil.WriteFile(w.Config.RegistrationFile, jsonBytes, 0600); err != nil {
 				return err
 			}
 		}
@@ -142,7 +142,7 @@ func (w *AcmeWrapper) initACME(serverRunning bool) (err error) {
 
 	// All of the challenges are disabled EXCEPT SNI
 	w.client.ExcludeChallenges([]acme.Challenge{acme.HTTP01, acme.DNS01})
-	w.client.SetTLSAddress(w.config.Address)
+	w.client.SetTLSAddress(w.Config.Address)
 
 	// Now if we are to renew our certificate, do it now! We do this now if server is not running
 	// yet, since in this case we use the default SNI provider, which runs a custom server.
@@ -151,9 +151,9 @@ func (w *AcmeWrapper) initACME(serverRunning bool) (err error) {
 	// no not need a custom server (and not have any downtime) while updating
 	if w.CertNeedsUpdate() && !serverRunning {
 		// Renew sets the config mutex, so unset it now
-		w.configmutex.Unlock()
+		w.Unlock()
 		err = w.Renew()
-		w.configmutex.Lock()
+		w.Lock()
 		if err != nil {
 			return err
 		}

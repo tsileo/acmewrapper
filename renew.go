@@ -51,16 +51,20 @@ func getCertError(errmap map[string]error) error {
 
 // Renew generates a new certificate
 func (w *AcmeWrapper) Renew() (err error) {
-	w.configmutex.Lock()
-	defer w.configmutex.Unlock()
+	if w.Config.RenewCallback != nil {
+		w.Config.RenewCallback()
+	}
 
-	if w.config.AcmeDisabled {
+	w.Lock()
+	defer w.Unlock()
+
+	if w.Config.AcmeDisabled {
 		return errors.New("Can't renew cert when ACME is disabled")
 	}
 
 	// TODO: In the future, figure out how to get renewals working with
 	// the information we have
-	cert, errmap := w.client.ObtainCertificate(w.config.Domains, true, nil)
+	cert, errmap := w.client.ObtainCertificate(w.Config.Domains, true, nil)
 	err = getCertError(errmap)
 
 	if err != nil {
@@ -72,7 +76,7 @@ func (w *AcmeWrapper) Renew() (err error) {
 		// There are new TOS
 
 		// TODO: update registration with new TOS
-		if !w.config.TOSCallback(w.registration.TosURL) {
+		if !w.Config.TOSCallback(w.registration.TosURL) {
 			return errors.New("Did not accept new TOS")
 		}
 
@@ -82,7 +86,7 @@ func (w *AcmeWrapper) Renew() (err error) {
 		}
 
 		// We agreed to new TOS. try again
-		cert, errmap = w.client.ObtainCertificate(w.config.Domains, true, nil)
+		cert, errmap = w.client.ObtainCertificate(w.Config.Domains, true, nil)
 		err = getCertError(errmap)
 		if err != nil {
 			return err
@@ -95,8 +99,8 @@ func (w *AcmeWrapper) Renew() (err error) {
 	}
 
 	// Write the certs to file if we are using file-backed stuff
-	if w.config.TLSCertFile != "" {
-		writeCert(w.config.TLSCertFile, w.config.TLSKeyFile, cert)
+	if w.Config.TLSCertFile != "" {
+		writeCert(w.Config.TLSCertFile, w.Config.TLSKeyFile, cert)
 	}
 	fmt.Printf("Writing new cert...")
 	w.certmutex.Lock()
@@ -110,23 +114,25 @@ func (w *AcmeWrapper) Renew() (err error) {
 // any renewals if ACME is configured are run on time.
 func backgroundExpirationChecker(w *AcmeWrapper) {
 	for {
-		time.Sleep(time.Duration(w.config.RenewTime) * time.Second)
+		time.Sleep(time.Duration(w.Config.RenewTime) * time.Second)
 		if w.CertNeedsUpdate() {
 			for {
-
-				if w.config.RenewCallback != nil {
-					w.config.RenewCallback()
+				if !w.CertNeedsUpdate() {
+					break
 				}
-				if !w.config.AcmeDisabled {
+				if w.Config.RenewCallback != nil {
+					w.Config.RenewCallback()
+				}
+				if !w.Config.AcmeDisabled {
 					err := w.Renew()
-					if err != nil && w.config.RenewFailedCallback != nil {
-						w.config.RenewFailedCallback(err)
+					if err != nil && w.Config.RenewFailedCallback != nil {
+						w.Config.RenewFailedCallback(err)
 					}
 				}
 				if !w.CertNeedsUpdate() {
 					break
 				}
-				time.Sleep(time.Duration(w.config.RetryDelay) * time.Second)
+				time.Sleep(time.Duration(w.Config.RetryDelay) * time.Second)
 			}
 		}
 

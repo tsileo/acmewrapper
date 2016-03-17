@@ -12,7 +12,8 @@ import (
 
 // AcmeWrapper is the main object which controls tls certificates and their renewals
 type AcmeWrapper struct {
-	config Config
+	sync.Mutex
+	Config Config
 
 	certmutex   sync.RWMutex // certmutex is used to make sure that replacing certificates doesn't asplode
 	configmutex sync.Mutex   // configmutex ensures that settings for the ACME stuff don't happen in parallel
@@ -36,7 +37,7 @@ type AcmeWrapper struct {
 // GetEmail returns the user email (if any)
 // NOTE: NOT threadsafe
 func (w *AcmeWrapper) GetEmail() string {
-	return w.config.Email
+	return w.Config.Email
 }
 
 // GetRegistration returns the registration currently being used
@@ -101,6 +102,20 @@ func (w *AcmeWrapper) TLSConfig() *tls.Config {
 	}
 }
 
+// AcmeDisabled allows to enable/disable acme-based certificate. Note that it is assumed that
+// this function is only called during server runtime (ie, your server is already listening).
+// its main purpose is to enable live reload of acme configuration. Do NOT set AcmeDisabled
+// in AcmeWrapper.Config, since it will panic.
+func (w *AcmeWrapper) AcmeDisabled(set bool) error {
+	w.Lock()
+	w.Config.AcmeDisabled = set
+	w.Unlock()
+	if !set && w.client == nil {
+		return w.initACME(true)
+	}
+	return nil
+}
+
 // SetNewCert loads a new TLS key/cert from the given files. Running it with the same
 // filenames as existing cert will reload them
 func (w *AcmeWrapper) SetNewCert(certfile, keyfile string) error {
@@ -142,7 +157,7 @@ func New(c Config) (*AcmeWrapper, error) {
 	// Now set up the actual wrapper
 
 	var w AcmeWrapper
-	w.config = c
+	w.Config = c
 	w.certs = make(map[string]*tls.Certificate)
 
 	// Now load up the key and cert files for TLS if they are set
