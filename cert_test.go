@@ -3,6 +3,7 @@ package acmewrapper
 import (
 	"bytes"
 	"crypto/tls"
+	"fmt"
 	"net/http"
 	"os"
 	"testing"
@@ -108,12 +109,15 @@ func TestCert(t *testing.T) {
 		http.Serve(listener, nil)
 	}()
 
+	fmt.Printf("acmeenable\n")
 	require.NoError(t, w.AcmeDisabled(false))
 
 	// Now the certificate should be set
+	fmt.Printf("getcert\n")
 	crt := w.GetCertificate()
-
+	fmt.Printf("Sleeping for 8 seconds...\n")
 	time.Sleep(8 * time.Second)
+	fmt.Printf("Done sleeping\n")
 
 	// The certificate should be renewed
 	require.NotEqual(t, crt, w.GetCertificate())
@@ -123,4 +127,5 @@ func TestCert(t *testing.T) {
 	w.Config.RenewCheck = 9999999999
 	w.Config.RetryDelay = 9999999999
 	w.Config.RenewTime = 500
+	listener.Close()
 }
