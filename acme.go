@@ -166,7 +166,7 @@ func (w *AcmeWrapper) initACME(serverRunning bool) (err error) {
 	// so that it uses our custom SNI provider. We don't want
 	// to start custom servers, but rather plug into our certificate updater once
 	// we are running. This allows cert updates to be transparent.
-	w.client.SetChallengeProvider(acme.TLSSNI01, wrapperChallengeProvider{
+	w.client.SetChallengeProvider(acme.TLSSNI01, &wrapperChallengeProvider{
 		w: w,
 	})
 
