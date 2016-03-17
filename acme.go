@@ -175,7 +175,9 @@ func (w *AcmeWrapper) initACME(serverRunning bool) (err error) {
 	// the server is already active rather than starting a new server.
 
 	if w.CertNeedsUpdate() && serverRunning {
+		w.Unlock()
 		err = w.Renew()
+		w.Lock()
 		if err != nil {
 			return err
 		}

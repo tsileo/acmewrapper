@@ -20,7 +20,7 @@ type wrapperChallengeProvider struct {
 
 // Present sets up the challenge domain thru SNI. Part of acme.ChallengeProvider interface
 func (c wrapperChallengeProvider) Present(domain, token, keyAuth string) error {
-	fmt.Printf("RUNNING PROVIDER")
+	fmt.Printf("RUNNING PROVIDER\n")
 	// Use ACME's SNI challenge cert maker. How nice that it is exported :)
 	cert, err := acme.TLSSNI01ChallengeCert(keyAuth)
 	if err != nil {
@@ -49,6 +49,7 @@ func (c wrapperChallengeProvider) Present(domain, token, keyAuth string) error {
 
 // CleanUp removes the challenge domain from SNI. Part of acme.ChallengeProvider interface
 func (c wrapperChallengeProvider) CleanUp(domain, token, keyAuth string) error {
+	fmt.Printf("STOPPING PROVIDER\n")
 	for i := range c.cert.Leaf.DNSNames {
 		c.w.RemSNI(c.cert.Leaf.DNSNames[i])
 	}
