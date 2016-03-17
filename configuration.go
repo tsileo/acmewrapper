@@ -9,7 +9,7 @@ const (
 	DefaultKeyType = acme.RSA2048
 
 	// The default port to use for initializing certs on startup
-	DefaultPort = 443
+	DefaultAddress = ":443"
 
 	// DefaultRenewTime is the time period before cert expiration to attempt renewal
 	DefaultRenewTime  = int64(60 * 60 * 24 * 7)
@@ -81,7 +81,7 @@ type Config struct {
 	// server at that location to generate initial certificates. Once that is done,
 	// all further renewals are done through the SNI interface to your own server code.
 	// The default here is 443
-	Port string
+	Address string
 
 	// This callback is run before each attempt at renewing. If not set, it simply isn't run.
 	// If ACME is disabled, it is run every RetryDelay from RenewTime. That is, by default,

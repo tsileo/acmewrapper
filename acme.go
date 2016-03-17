@@ -7,6 +7,7 @@ import (
 	"crypto/rsa"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"os"
 
@@ -21,6 +22,7 @@ import (
 //	- w.privatekey
 //	- w.registration
 //	- w.client (init the user + agree to TOS)
+//	- gets certificates if they don't exist or are close to expiration.
 //
 // Its input is whether there is a server running already. If the server is running,
 // then the SNI query will succeed. If it isn't (ie, we are just setting up), then
@@ -139,14 +141,45 @@ func (w *AcmeWrapper) initACME(serverRunning bool) (err error) {
 		}
 	}
 
+	// All of the challenges are disabled EXCEPT SNI
+	w.client.ExcludeChallenges([]acme.Challenge{acme.HTTP01, acme.DNS01})
+	w.client.SetTLSAddress(w.config.Address)
+
+	fmt.Printf("CERTGET\n")
+	// Now if we are to renew our certificate, do it now! We do this now if server is not running
+	// yet, since in this case we use the default SNI provider, which runs a custom server.
+	//  We start a quick custom server
+	// to get the initial certificates. In the future, we will use our custom SNI provider
+	// no not need a custom server (and not have any downtime) while updating
+	if w.CertNeedsUpdate() && !serverRunning {
+		// Renew sets the config mutex, so unset it now
+		w.configmutex.Unlock()
+		err = w.Renew()
+		w.configmutex.Lock()
+		if err != nil {
+			return err
+		}
+	}
+	fmt.Printf("CERTGETDONE\n")
+
 	// Now that the user and client basics are intialized, we set up the client
-	// so that it uses our custom SNI provider and disables the rest. We don't want
-	// to start custom servers, but rather plug into our certificate updater
+	// so that it uses our custom SNI provider. We don't want
+	// to start custom servers, but rather plug into our certificate updater once
+	// we are running. This allows cert updates to be transparent.
 	w.client.SetChallengeProvider(acme.TLSSNI01, wrapperChallengeProvider{
 		w: w,
 	})
-	// All of the challenges are disabled EXCEPT SNI
-	w.client.ExcludeChallenges([]acme.Challenge{acme.HTTP01, acme.DNS01})
+
+	// If our server IS running already, then we get our certificates NOW. The difference
+	// between the above version and this one is that we use the custom provider if
+	// the server is already active rather than starting a new server.
+
+	if w.CertNeedsUpdate() && serverRunning {
+		err = w.Renew()
+		if err != nil {
+			return err
+		}
+	}
 
 	return nil
 

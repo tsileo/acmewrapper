@@ -4,6 +4,7 @@ import (
 	"crypto"
 	"crypto/tls"
 	"errors"
+	"fmt"
 	"os"
 	"sync"
 
@@ -103,8 +104,16 @@ func (w *AcmeWrapper) TLSConfig() *tls.Config {
 
 // SetNewCert loads a new TLS key/cert from the given files. Running it with the same
 // filenames as existing cert will reload them
-func (w *AcmeWrapper) SetNewCert(keyfile, certfile string) error {
-	return errors.New("Unimplemented")
+func (w *AcmeWrapper) SetNewCert(certfile, keyfile string) error {
+	cert, err := tls.LoadX509KeyPair(certfile, keyfile)
+	if err != nil {
+		return err
+	}
+	w.certmutex.Lock()
+	w.cert = &cert
+	w.certmutex.Unlock()
+
+	return nil
 }
 
 // New generates an AcmeWrapper given a configuration
@@ -124,6 +133,9 @@ func New(c Config) (*AcmeWrapper, error) {
 	if c.RetryDelay == 0 {
 		c.RetryDelay = DefaultRetryDelay
 	}
+	if c.Address == "" {
+		c.Address = DefaultAddress
+	}
 	if c.TOSCallback == nil {
 		return nil, errors.New("TOSCallback is required: you need to agree to the terms of service")
 	}
@@ -136,6 +148,7 @@ func New(c Config) (*AcmeWrapper, error) {
 
 	// Now load up the key and cert files for TLS if they are set
 	if c.TLSKeyFile != "" || c.TLSCertFile != "" {
+		fmt.Printf("SET CERT\n")
 		err = w.SetNewCert(c.TLSKeyFile, c.TLSKeyFile)
 		if err != nil {
 			if !os.IsNotExist(err) || c.AcmeDisabled {
@@ -144,6 +157,7 @@ func New(c Config) (*AcmeWrapper, error) {
 				// TODO: We don't check here if both are missing vs 1 missing
 				return nil, err
 			}
+
 		}
 	}
 
@@ -154,6 +168,7 @@ func New(c Config) (*AcmeWrapper, error) {
 		//	- w.privatekey
 		//	- w.registration
 		//	- w.client
+		fmt.Printf("ACME INIT\n")
 		if err = w.initACME(false); err != nil {
 			return nil, err
 		}

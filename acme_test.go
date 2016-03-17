@@ -10,6 +10,8 @@ import (
 
 const TESTAPI = "https://acme-staging.api.letsencrypt.org/directory"
 
+const TESTDOMAINS = []string{"connectordb.com", "www.connectordb.com"}
+
 func TestUserErrors(t *testing.T) {
 	_, err := New(Config{
 		Server:      TESTAPI,
@@ -18,14 +20,14 @@ func TestUserErrors(t *testing.T) {
 	require.Error(t, err)
 	_, err = New(Config{
 		Server:  TESTAPI,
-		Domains: []string{"localhost"},
+		Domains: []string{TESTDOMAINS},
 	})
 	require.Error(t, err)
 
 	_, err = New(Config{
 		Server:         TESTAPI,
 		TOSCallback:    TOSAgree,
-		Domains:        []string{"localhost"},
+		Domains:        []string{TESTDOMAINS},
 		PrivateKeyFile: "testinguser.key",
 	})
 	require.Error(t, err)
@@ -33,7 +35,7 @@ func TestUserErrors(t *testing.T) {
 	_, err = New(Config{
 		Server:           TESTAPI,
 		TOSCallback:      TOSAgree,
-		Domains:          []string{"localhost"},
+		Domains:          []string{TESTDOMAINS},
 		RegistrationFile: "testinguser.reg",
 	})
 	require.Error(t, err)
@@ -44,7 +46,7 @@ func TestUserErrors(t *testing.T) {
 			fmt.Printf("TOS URL: %s\n", tosurl)
 			return false
 		},
-		Domains: []string{"localhost"},
+		Domains: []string{TESTDOMAINS},
 	})
 
 	require.Error(t, err)
@@ -57,7 +59,7 @@ func TestUser(t *testing.T) {
 	w, err := New(Config{
 		Server:      TESTAPI,
 		TOSCallback: TOSAgree,
-		Domains:     []string{"localhost"},
+		Domains:     []string{TESTDOMAINS},
 	})
 
 	require.NoError(t, err)

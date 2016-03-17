@@ -2,6 +2,8 @@ package acmewrapper
 
 import (
 	"crypto/tls"
+	"crypto/x509"
+	"fmt"
 
 	"github.com/xenolf/lego/acme"
 )
@@ -18,9 +20,15 @@ type wrapperChallengeProvider struct {
 
 // Present sets up the challenge domain thru SNI. Part of acme.ChallengeProvider interface
 func (c wrapperChallengeProvider) Present(domain, token, keyAuth string) error {
-
+	fmt.Printf("RUNNING PROVIDER")
 	// Use ACME's SNI challenge cert maker. How nice that it is exported :)
 	cert, err := acme.TLSSNI01ChallengeCert(keyAuth)
+	if err != nil {
+		return err
+	}
+
+	// The returned cert has the info we want, but not parsed - so parse it
+	cert.Leaf, err = x509.ParseCertificate(cert.Certificate[0])
 	if err != nil {
 		return err
 	}
