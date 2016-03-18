@@ -7,6 +7,7 @@ Add Let's Encrypt support to your golang server in 10 lines of code.
 ```go
 w, err := acmewrapper.New(acmewrapper.Config{
 	Domains: []string{"example.com","www.example.com"},
+	Address: ":443",
 
 	TLSCertFile: "cert.pem",
 	TLSKeyFile:  "key.pem",
@@ -86,6 +87,7 @@ func main() {
 
 	w, err := acmewrapper.New(acmewrapper.Config{
 		Domains: []string{"example.com","www.example.com"},
+		Address: ":443",
 
 		TLSCertFile: "cert.pem",
 		TLSKeyFile:  "key.pem",
