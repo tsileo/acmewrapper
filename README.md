@@ -34,7 +34,13 @@ Since Let's Encrypt is usually an option that can be turned off, the wrapper als
 
 And finally, *technically*, none of the file names shown above are actually necessary. The only needed fields are Domains and TOSCallback. Without the given file names, it runs in-memory. Beware, though: if you do that, you might run into rate limiting from Let's Encrypt if you restart too often!
 
-**WARNING:** This code literally JUST started working. It'll need at least 2 months to be tested running constantly to make sure it doesn't randomly fail.
+**WARNING:** This code literally JUST started working. It'll need at least 2 months to be tested running constantly to make sure it doesn't randomly fail. Do NOT use it anywhere important.
+
+## How It Works
+
+Let's Encrypt has SNI support for domain validation. That means we can update our certificate if we control the TLS configuration of a server. That is exactly what acmewrapper does. Not only does it transparently update your server's certificate, but it uses its control of SNI to pass validation tests.
+
+This means that *no other changes* are needed to your code. You don't need any special handlers or hidden directories. So long as acmewrapper is able to set your TLS configuration, and your TLS server is running on port 443, you can instantly have a working Let's Encrypt certificate.
 
 ## Example
 
@@ -110,12 +116,6 @@ func main() {
 	http.Serve(listener, nil)
 }
 ```
-
-## How It Works
-
-Let's Encrypt has SNI support for domain validation. That means we can update our certificate if we control the TLS configuration of a server. That is exactly what acmewrapper does. Not only does it transparently update your server's certificate, but it uses its control of SNI to pass validation tests.
-
-This means that *no other changes* are needed to your code. You don't need any special handlers or hidden directories. So long as acmewrapper is able to set your TLS configuration, and your TLS server is running on port 443, you can instantly have a working Let's Encrypt certificate.
 
 ## Testing
 
