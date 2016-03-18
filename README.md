@@ -27,11 +27,11 @@ listener, err := tls.Listen("tcp", ":443", w.TLSConfig())
 ```
 
 Acmewrapper is built upon https://github.com/xenolf/lego, and handles all certificate generation, renewal
-and replacement automatically. After the above code snippet, your certificate will automatically be renewed each month without downtime. Any files that don't exist will be created, and your "cert.pem" and "key.pem" will be kept up to date.
+and replacement automatically. After the above code snippet, your certificate will automatically be renewed a week before expiring without downtime. Any files that don't exist will be created, and your "cert.pem" and "key.pem" will be kept up to date.
 
-Since Let's Encrypt is usually an option that can be turned off, the wrapper also has support for disabling let's encrypt for the times when you just want to use its live reload support (ie, no need to restart the server to load new certificates - look at the docs).
+Since Let's Encrypt is usually an option that can be turned off, the wrapper also has support for disabling ACME support for the times when you just want to use normal certificates and live reload support (ie, no need to restart the server to load new certificates - look at the docs).
 
-And finally, *technically*, none of the file names actually are necessary. The only needed fields are Domains and TOSCallback. Without the given file names, it runs in-memory. Beware, though: if you do that, you might run into rate limiting from Let's Encrypt if you restart too often!
+And finally, *technically*, none of the file names shown above are actually necessary. The only needed fields are Domains and TOSCallback. Without the given file names, it runs in-memory. Beware, though: if you do that, you might run into rate limiting from Let's Encrypt if you restart too often!
 
 **WARNING:** This code literally JUST started working. It'll need at least 2 months to be tested running constantly to make sure it doesn't randomly fail.
 
@@ -39,7 +39,7 @@ And finally, *technically*, none of the file names actually are necessary. The o
 
 ### Old Code
 
-This is sample code before adding Let's encrypt support:
+This is sample code before adding Let's Encrypt support:
 
 ```go
 package main
@@ -111,9 +111,9 @@ func main() {
 
 ## How It Works
 
-Let's Encrypt has SNI support for domain validation. That means we can update our certificate if we control the TLS configuration of a server. That is exactly what acmewrapper does. Not only does it transparently update your server's certificate when it changes, but it uses its control of SNI to pass validation tests.
+Let's Encrypt has SNI support for domain validation. That means we can update our certificate if we control the TLS configuration of a server. That is exactly what acmewrapper does. Not only does it transparently update your server's certificate, but it uses its control of SNI to pass validation tests.
 
-This means that *no other changes* are needed to your code. You don't need any special handlers or hidden directories. So long as acmewrapper is able to set your TLS configuration, and your TLS server is running on port 443, it can renew your certificates.
+This means that *no other changes* are needed to your code. You don't need any special handlers or hidden directories. So long as acmewrapper is able to set your TLS configuration, and your TLS server is running on port 443, you can instantly have a working Let's Encrypt certificate.
 
 ## Testing
 
