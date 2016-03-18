@@ -12,7 +12,7 @@ const (
 	DefaultAddress = ":443"
 
 	// DefaultRenewTime is the time period before cert expiration to attempt renewal
-	DefaultRenewTime  = int64(60 * 60 * 24 * 7)
+	DefaultRenewTime  = int64(60 * 60 * 24 * 30)
 	DefaultRetryDelay = int64(60 * 60 * 24 * 1) // Retry once a day
 	DefaultRenewCheck = int64(60 * 60 * 12)     // The time between checks for renewal
 )
@@ -67,7 +67,7 @@ type Config struct {
 	TLSCertFile string
 	TLSKeyFile  string
 
-	RenewTime  int64 // The time in seconds until expiration of current cert that renew is attempted. If not set, default is 5d
+	RenewTime  int64 // The time in seconds until expiration of current cert that renew is attempted. If not set, default is 30d
 	RetryDelay int64 // The time in seconds to delay between attempts at renewing if renewal fails. (1 day)
 	RenewCheck int64 // The time inbetween checks for renewal. Default is 12h
 

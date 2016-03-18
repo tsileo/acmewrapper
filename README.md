@@ -28,7 +28,7 @@ listener, err := tls.Listen("tcp", ":443", w.TLSConfig())
 ```
 
 Acmewrapper is built upon https://github.com/xenolf/lego, and handles all certificate generation, renewal
-and replacement automatically. After the above code snippet, your certificate will automatically be renewed a week before expiring without downtime. Any files that don't exist will be created, and your "cert.pem" and "key.pem" will be kept up to date.
+and replacement automatically. After the above code snippet, your certificate will automatically be renewed 30 days before expiring without downtime. Any files that don't exist will be created, and your "cert.pem" and "key.pem" will be kept up to date.
 
 Since Let's Encrypt is usually an option that can be turned off, the wrapper also has support for disabling ACME support for the times when you just want to use normal certificates and live reload support (ie, no need to restart the server to load new certificates - look at the docs).
 
