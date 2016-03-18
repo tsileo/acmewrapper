@@ -42,7 +42,7 @@ Let's Encrypt has SNI support for domain validation. That means we can update ou
 
 This means that *no other changes* are needed to your code. You don't need any special handlers or hidden directories. So long as acmewrapper is able to set your TLS configuration, and your TLS server is running on port 443, you can instantly have a working Let's Encrypt certificate.
 
-**NOTE:** The ability to manage certificates in this way was enabled in go 1.5 - acmewrapper will not work with older go versions.
+**NOTE:** The ability to manage certificates in this way was enabled in go 1.6 - acmewrapper will not work with older go versions.
 
 ## Example
 
