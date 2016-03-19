@@ -21,7 +21,7 @@ w, err := acmewrapper.New(acmewrapper.Config{
 
 
 if err!=nil {
-	log.Fatal("Let's Encrypt: ", err)
+	log.Fatal("acmewrapper: ", err)
 }
 
 listener, err := tls.Listen("tcp", ":443", w.TLSConfig())
@@ -45,6 +45,10 @@ This means that *no other changes* are needed to your code. You don't need any s
 **NOTE:** The ability to manage certificates in this way was enabled in go 1.6 - acmewrapper will not work with older go versions.
 
 ## Example
+
+You can go into `./example` to find a sample basic http server that will serve a given folder over https with Let's Encrypt.
+
+Another simple example is given below:
 
 ### Old Code
 
@@ -74,6 +78,8 @@ func main() {
 
 ### New Code
 
+Adding let's encrypt support is a matter of setting the tls config:
+
 ```go
 package main
 
@@ -91,7 +97,8 @@ func HelloServer(w http.ResponseWriter, req *http.Request) {
 }
 
 func main() {
-    http.HandleFunc("/hello", HelloServer)
+	mux := http.NewServeMux()
+    mux.HandleFunc("/hello", HelloServer)
 
 	w, err := acmewrapper.New(acmewrapper.Config{
 		Domains: []string{"example.com","www.example.com"},
@@ -108,14 +115,24 @@ func main() {
 
 
 	if err!=nil {
-		log.Fatal("Let's Encrypt: ", err)
+		log.Fatal("acmewrapper: ", err)
 	}
 
-	listener, err := tls.Listen("tcp", ":443", w.TLSConfig())
+	tlsconfig := w.TLSConfig()
+
+	listener, err := tls.Listen("tcp", ":443", tlsconfig)
     if err != nil {
         log.Fatal("Listener: ", err)
     }
-	http.Serve(listener, nil)
+
+	// To enable http2, we need http.Server to have reference to tlsconfig
+	// https://github.com/golang/go/issues/14374
+	server := &http.Server{
+		Addr: ":443",
+		Handler:   mux,
+		TLSConfig: tlsconfig,
+	}
+	server.Serve(listener)
 }
 ```
 

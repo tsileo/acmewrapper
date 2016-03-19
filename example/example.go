@@ -42,6 +42,9 @@ func main() {
 		*acme = "https://acme-staging.api.letsencrypt.org/directory"
 	}
 
+	mux := http.NewServeMux()
+	mux.Handle("/", http.FileServer(http.Dir(flag.Arg(flag.NArg()-1))))
+
 	w, err := acmewrapper.New(acmewrapper.Config{
 		Address: *address,
 
@@ -64,13 +67,23 @@ func main() {
 		os.Exit(1)
 	}
 
-	http.Handle("/", http.FileServer(http.Dir(flag.Arg(flag.NArg()-1))))
+	tlsconfig := w.TLSConfig()
 
-	listener, err := tls.Listen("tcp", *address, w.TLSConfig())
+	listener, err := tls.Listen("tcp", *address, tlsconfig)
 	if err != nil {
 		fmt.Printf("ERROR: %s", err.Error())
 		os.Exit(1)
 	}
+
 	fmt.Printf("\n\nRunning server at %s\n\n", *address)
-	http.Serve(listener, nil)
+
+	// In order to enable http2, we can't just use http.Serve in go1.6, so we need
+	// to create a manual http.Server, since it needs the tlsconfig
+	// https://github.com/golang/go/issues/14374
+	server := &http.Server{
+		Addr:      *address,
+		Handler:   mux,
+		TLSConfig: tlsconfig,
+	}
+	server.Serve(listener)
 }
