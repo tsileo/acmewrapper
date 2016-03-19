@@ -27,11 +27,10 @@ func logf(s string, v ...interface{}) {
 
 // AcmeWrapper is the main object which controls tls certificates and their renewals
 type AcmeWrapper struct {
-	sync.Mutex
-	Config Config
+	sync.Mutex // configmutex ensures that settings for the ACME stuff don't happen in parallel
+	Config     Config
 
-	certmutex   sync.RWMutex // certmutex is used to make sure that replacing certificates doesn't asplode
-	configmutex sync.Mutex   // configmutex ensures that settings for the ACME stuff don't happen in parallel
+	certmutex sync.RWMutex // certmutex is used to make sure that replacing certificates doesn't asplode
 
 	// Our user's private key & registration. Both are needed in order to be able
 	// to renew/generate new certs.
@@ -70,7 +69,7 @@ func (w *AcmeWrapper) GetPrivateKey() crypto.PrivateKey {
 // GetCertificate returns the current TLS certificate
 func (w *AcmeWrapper) GetCertificate() *tls.Certificate {
 	w.certmutex.RLock()
-	w.certmutex.RUnlock()
+	defer w.certmutex.RUnlock()
 	return w.cert
 }
 
@@ -94,7 +93,7 @@ func (w *AcmeWrapper) RemSNI(domain string) {
 
 // TLSConfigGetCertificate is the main function used in the ACME wrapper. This is set in tls.Config to
 // the GetCertificate property. Note that Certificates must be empty for it to be called
-// correctly, so unless you know what you're doing, just use AcmeWrapper.Get()
+// correctly, so unless you know what you're doing, just use AcmeWrapper.TLSConfig()
 func (w *AcmeWrapper) TLSConfigGetCertificate(clientHello *tls.ClientHelloInfo) (*tls.Certificate, error) {
 	w.certmutex.RLock()
 	defer w.certmutex.RUnlock()
