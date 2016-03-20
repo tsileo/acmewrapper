@@ -13,11 +13,21 @@ import (
 // If the files already exist, it renames the old versions by adding .bak to them. This makes
 // sure that a little accident doesn't cause too much damage.
 func (w *AcmeWrapper) writeCert(certfile, keyfile string, crt acme.CertificateResource) (err error) {
-	if err := w.backupAndSaveFile(certfile, crt.Certificate); err != nil {
-		return err
-	}
-	if err := w.backupAndSaveFile(keyfile, crt.PrivateKey); err != nil {
-		return err
+	//only create a backup version if we're definitely saving to disk
+	if w.Config.SaveFileCallback == nil {
+		if err := w.backupAndSaveFile(certfile, crt.Certificate); err != nil {
+			return err
+		}
+		if err := w.backupAndSaveFile(keyfile, crt.PrivateKey); err != nil {
+			return err
+		}
+	} else {
+		if err := w.saveFile(certfile, crt.Certificate); err != nil {
+			return err
+		}
+		if err := w.saveFile(keyfile, crt.PrivateKey); err != nil {
+			return err
+		}
 	}
 	return nil
 }
