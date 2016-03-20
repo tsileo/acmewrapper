@@ -91,7 +91,7 @@ func TestCert(t *testing.T) {
 			renewnum++
 		},
 
-		RenewTime:  999999 * time.Second, // A ridiculous value so that renew always happens
+		RenewTime:  50 * 365 * 24 * time.Hour, // A ridiculous value so that renew always happens
 		RenewCheck: 3 * time.Second,
 		RetryDelay: 3 * time.Second,
 

@@ -115,16 +115,13 @@ func (w *AcmeWrapper) Renew() (err error) {
 func backgroundExpirationChecker(w *AcmeWrapper) {
 	logf("[acmewrapper] Started background expiration checker\n")
 	for {
-		time.Sleep(time.Duration(w.Config.RenewCheck) * time.Second)
+		time.Sleep(w.Config.RenewCheck)
 		logf("[acmewrapper] Checking if cert needs update...\n")
 		if w.CertNeedsUpdate() {
 			logf("[acmewrapper] ...yes it does\n")
 			for {
 				if !w.CertNeedsUpdate() {
 					break
-				}
-				if w.Config.RenewCallback != nil {
-					w.Config.RenewCallback()
 				}
 				if !w.Config.AcmeDisabled {
 					err := w.Renew()
@@ -138,7 +135,7 @@ func backgroundExpirationChecker(w *AcmeWrapper) {
 				if !w.CertNeedsUpdate() {
 					break
 				}
-				time.Sleep(time.Duration(w.Config.RetryDelay) * time.Second)
+				time.Sleep(w.Config.RetryDelay)
 			}
 		}
 
