@@ -23,6 +23,8 @@ _testmain.go
 *.test
 *.prof
 
-example/*.crt
-example/*.pem
-example/*.reg
+*.key
+*.crt
+*.pem
+*.reg
+*.bak

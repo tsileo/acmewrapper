@@ -95,4 +95,12 @@ type Config struct {
 	// When this is set to True, no ACME-related things happen - it just passes through your
 	// key and cert directly.
 	AcmeDisabled bool
+
+	// When this callback is defined, it will be used to save all files.
+	// If this callback returns acmewrapper.ErrNotHandled, it will fallback to save file to disk.
+	SaveFileCallback func(path string, contents []byte) error
+	// When this callback is defined, it will be used to load all files.
+	// If this callback does not find the file at the provided path, it must return os.ErrNotExist.
+	// If this callback returns acmewrapper.ErrNotHandled, it will fallback to load file from disk.
+	LoadFileCallback func(path string) (contents []byte, err error)
 }

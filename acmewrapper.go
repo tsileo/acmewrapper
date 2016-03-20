@@ -139,7 +139,7 @@ func (w *AcmeWrapper) AcmeDisabled(set bool) error {
 // SetNewCert loads a new TLS key/cert from the given files. Running it with the same
 // filenames as existing cert will reload them
 func (w *AcmeWrapper) SetNewCert(certfile, keyfile string) error {
-	cert, err := tls.LoadX509KeyPair(certfile, keyfile)
+	cert, err := w.loadX509KeyPair(certfile, keyfile)
 	if err != nil {
 		return err
 	}

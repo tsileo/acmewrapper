@@ -100,7 +100,7 @@ func (w *AcmeWrapper) Renew() (err error) {
 
 	// Write the certs to file if we are using file-backed stuff
 	if w.Config.TLSCertFile != "" {
-		writeCert(w.Config.TLSCertFile, w.Config.TLSKeyFile, cert)
+		w.writeCert(w.Config.TLSCertFile, w.Config.TLSKeyFile, cert)
 	}
 
 	w.certmutex.Lock()
