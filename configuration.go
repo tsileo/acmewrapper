@@ -1,6 +1,10 @@
 package acmewrapper
 
-import "github.com/xenolf/lego/acme"
+import (
+	"time"
+
+	"github.com/xenolf/lego/acme"
+)
 
 const (
 	// The server to use by default
@@ -12,9 +16,9 @@ const (
 	DefaultAddress = ":443"
 
 	// DefaultRenewTime is the time period before cert expiration to attempt renewal
-	DefaultRenewTime  = int64(60 * 60 * 24 * 30)
-	DefaultRetryDelay = int64(60 * 60 * 24 * 1) // Retry once a day
-	DefaultRenewCheck = int64(60 * 60 * 12)     // The time between checks for renewal
+	DefaultRenewTime  = 30 * 24 * time.Hour
+	DefaultRetryDelay = 1 * 24 * time.Hour // Retry once a day
+	DefaultRenewCheck = 12 * time.Hour     // The time between checks for renewal
 )
 
 // TOSAgree always agrees to the terms of service. This should only be really used if
@@ -67,9 +71,9 @@ type Config struct {
 	TLSCertFile string
 	TLSKeyFile  string
 
-	RenewTime  int64 // The time in seconds until expiration of current cert that renew is attempted. If not set, default is 30d
-	RetryDelay int64 // The time in seconds to delay between attempts at renewing if renewal fails. (1 day)
-	RenewCheck int64 // The time inbetween checks for renewal. Default is 12h
+	RenewTime  time.Duration // The time in seconds until expiration of current cert that renew is attempted. If not set, default is 30d
+	RetryDelay time.Duration // The time in seconds to delay between attempts at renewing if renewal fails. (1 day)
+	RenewCheck time.Duration // The time inbetween checks for renewal. Default is 12h
 
 	// The callback to use prompting the user to agree to the terms of service. A special Agree is built in, so
 	// you can set TOSCallback: TOSAgree

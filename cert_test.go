@@ -91,9 +91,9 @@ func TestCert(t *testing.T) {
 			renewnum++
 		},
 
-		RenewTime:  999999999999999, // A ridiculous value so that renew always happens
-		RenewCheck: 3,
-		RetryDelay: 3,
+		RenewTime:  999999 * time.Second, // A ridiculous value so that renew always happens
+		RenewCheck: 3 * time.Second,
+		RetryDelay: 3 * time.Second,
 
 		RenewFailedCallback: func(err error) {
 			require.NoError(t, err)
@@ -124,8 +124,8 @@ func TestCert(t *testing.T) {
 	require.True(t, renewnum >= 2)
 
 	// Stop it from being annoying in the background anymore
-	w.Config.RenewCheck = 9999999999
-	w.Config.RetryDelay = 9999999999
-	w.Config.RenewTime = 500
+	w.Config.RenewCheck = 9999 * 24 * time.Hour
+	w.Config.RetryDelay = 9999 * 24 * time.Hour
+	w.Config.RenewTime = 30 * time.Hour
 	listener.Close()
 }
