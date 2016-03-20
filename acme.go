@@ -7,7 +7,6 @@ import (
 	"crypto/rsa"
 	"encoding/json"
 	"errors"
-	"io/ioutil"
 	"os"
 
 	"github.com/xenolf/lego/acme"
@@ -49,8 +48,7 @@ func (w *AcmeWrapper) initACME(serverRunning bool) (err error) {
 
 		// We are to use file-backed registration. See if the files exist already. We first load
 		// the key file, then we load the registration file
-
-		w.privatekey, err = LoadPrivateKey(w.Config.PrivateKeyFile)
+		w.privatekey, err = w.loadPrivateKey(w.Config.PrivateKeyFile)
 		if err != nil {
 			if !os.IsNotExist(err) {
 				return err
@@ -58,14 +56,11 @@ func (w *AcmeWrapper) initACME(serverRunning bool) (err error) {
 			// The private key file doesn't exist - w.privatekey is left at nil
 		}
 
-		f, err := os.Open(w.Config.RegistrationFile)
+		regBytes, err := w.loadFile(w.Config.RegistrationFile)
 		if err == nil {
-			defer f.Close()
-
-			if err = json.NewDecoder(f).Decode(&w.registration); err != nil {
+			if err = json.Unmarshal(regBytes, &w.registration); err != nil {
 				return err
 			}
-
 		} else if !os.IsNotExist(err) {
 			return err
 		}
@@ -103,7 +98,7 @@ func (w *AcmeWrapper) initACME(serverRunning bool) (err error) {
 
 		if w.Config.PrivateKeyFile != "" {
 			// If we are to use a file, write it now
-			if err = SavePrivateKey(w.Config.PrivateKeyFile, w.privatekey); err != nil {
+			if err = w.savePrivateKey(w.Config.PrivateKeyFile, w.privatekey); err != nil {
 				return err
 			}
 		}
@@ -137,7 +132,7 @@ func (w *AcmeWrapper) initACME(serverRunning bool) (err error) {
 			if err != nil {
 				return err
 			}
-			if err = ioutil.WriteFile(w.Config.RegistrationFile, jsonBytes, 0600); err != nil {
+			if err = w.saveFile(w.Config.RegistrationFile, jsonBytes); err != nil {
 				return err
 			}
 		}
