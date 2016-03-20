@@ -3,7 +3,6 @@ package acmewrapper
 import (
 	"errors"
 	"io/ioutil"
-	"os"
 )
 
 var ErrNotHandled = errors.New("not handled")
@@ -41,23 +40,3 @@ func (w *AcmeWrapper) saveFile(path string, contents []byte) error {
 	return nil
 }
 
-func (w *AcmeWrapper) backupAndSaveFile(path string, contents []byte) error {
-	//load previous file and hold in memory
-	prev, err := w.loadFile(path)
-	if err != nil && !os.IsNotExist(err) {
-		return err
-	}
-	//then save over previous file
-	if err := w.saveFile(path, contents); err != nil {
-		//if fails, attempt to restore previous file just incase it was damaged
-		w.saveFile(path, prev)
-		return err
-	}
-	//if save was successful, overwrite previous backup, with previous file
-	if len(prev) > 0 {
-		if err := w.saveFile(path+".bak", prev); err != nil {
-			return err
-		}
-	}
-	return nil
-}
