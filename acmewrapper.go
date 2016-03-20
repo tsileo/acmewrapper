@@ -114,8 +114,10 @@ func (w *AcmeWrapper) TLSConfig() *tls.Config {
 	return &tls.Config{
 		//Go 1.6 "allows Listen to succeed when the Config has a nil Certificates, as long as the
 		//GetCertificate callback is set" See https://golang.org/doc/go1.6#minor_library_changes.
-		//So to add Go 1.5 support, we provide a blank certificate which will never be used.
-		Certificates:   []tls.Certificate{tls.Certificate{}},
+		//So to add Go 1.5 support, we provide a certificate that will never be used.
+		// This must be a valid cert, since if the client does not have SNI enabled in go1.4,
+		// then there could be issues. AcmeWrapper does not support clients without SNI enabled at this time.
+		Certificates:   []tls.Certificate{*w.cert},
 		GetCertificate: w.TLSConfigGetCertificate,
 	}
 }
