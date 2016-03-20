@@ -112,6 +112,10 @@ func (w *AcmeWrapper) TLSConfigGetCertificate(clientHello *tls.ClientHelloInfo) 
 // necessary.
 func (w *AcmeWrapper) TLSConfig() *tls.Config {
 	return &tls.Config{
+		//Go 1.6 "allows Listen to succeed when the Config has a nil Certificates, as long as the
+		//GetCertificate callback is set" See https://golang.org/doc/go1.6#minor_library_changes.
+		//So to add 1.5 support, we provide the default certificate in addition to GetCertificate.
+		Certificates:   []tls.Certificate{*w.cert},
 		GetCertificate: w.TLSConfigGetCertificate,
 	}
 }
