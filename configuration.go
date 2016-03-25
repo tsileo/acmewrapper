@@ -41,7 +41,7 @@ type TOSCallback func(agreementURL string) bool
 // While the only required component is Server, it is recommended that you save at least your
 // TLS cert and key
 type Config struct {
-	// The ACME server to query for key/cert. Default (Let's Encrpyt) used if not set
+	// The ACME server to query for key/cert. Default (Let's Encrypt) used if not set
 	Server string
 
 	// The domain for which to generate your certificate. Suppose you own mysite.com.
