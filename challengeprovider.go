@@ -21,7 +21,7 @@ type wrapperChallengeProvider struct {
 func (c *wrapperChallengeProvider) Present(domain, token, keyAuth string) error {
 	logf("[acmewrapper] Started SNI server modification for %s", domain)
 	// Use ACME's SNI challenge cert maker. How nice that it is exported :)
-	cert, err := acme.TLSSNI01ChallengeCert(keyAuth)
+	cert, _, err := acme.TLSSNI01ChallengeCert(keyAuth)
 	if err != nil {
 		return err
 	}
